@@ -11,7 +11,7 @@
     <h1 class="text-3xl font-bold mb-8">Список пользователей</h1>
 
     <div class="mb-4">
-        <a href="{{ route('users.create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        <a href="{{ url('/users/create') }}" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
             Создать пользователя
         </a>
     </div>
@@ -33,8 +33,8 @@
                     <td class="px-6 py-4 whitespace-nowrap">{{ $user->name }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">{{ $user->email }}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        <a href="{{ route('users.edit', $user->id) }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Редактировать</a>
-                        <form action="{{ url('/api/users/' . $user->id) }}" method="POST" class="inline" onsubmit="return confirm('Удалить пользователя?')">
+                        <a href="{{ url('/users/' . $user->id . '/edit') }}" class="text-indigo-600 hover:text-indigo-900 mr-3">Редактировать</a>
+                        <form action="{{ url('/users/' . $user->id) }}" method="POST" class="inline" onsubmit="return confirm('Удалить пользователя?')">
                             @csrf
                             @method('DELETE')
                             <button type="submit" class="text-red-600 hover:text-red-900">Удалить</button>
