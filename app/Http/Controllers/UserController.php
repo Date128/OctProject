@@ -56,4 +56,20 @@ class UserController extends Controller
         User::destroy($id);
         return response()->json(['message' => 'Deleted']);
     }
+    public function indexPage()
+    {
+        $users = User::all();
+        return view('users.index', compact('users'));
+    }
+
+    public function createPage()
+    {
+        return view('users.create');
+    }
+
+    public function editPage($id)
+    {
+        $user = User::findOrFail($id);
+        return view('users.edit', compact('user'));
+    }
 }
