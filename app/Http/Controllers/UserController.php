@@ -4,72 +4,90 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
-        $users = User::get();
+        $users = User::all();
         return response()->json($users);
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request)
     {
-        User::create($request->input());
+        try {
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users',
+                'password' => 'required|string|min:8'
+            ]);
+
+            $user = User::create([
+                'name' => $request->name,
+                'email' => $request->email,
+                'password' => Hash::make($request->password)
+            ]);
+
+            return response()->json($user, 201);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'errors' => $e->errors()
+            ], 422);
+        }
     }
 
-    /**
-     * Display the specified resource.
-     */
-    public function show(string $id)
+    public function show($id)
     {
         $user = User::find($id);
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
         return response()->json($user);
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, string $id)
+    public function update(Request $request, $id)
+    {
+        try {
+            $user = User::find($id);
+            if (!$user) {
+                return response()->json(['error' => 'User not found'], 404);
+            }
+
+            $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email,' . $id,
+                'password' => 'nullable|string|min:8'
+            ]);
+
+            $updateData = [
+                'name' => $request->name,
+                'email' => $request->email
+            ];
+
+            if ($request->filled('password')) {
+                $updateData['password'] = Hash::make($request->password);
+            }
+
+            $user->update($updateData);
+
+            return response()->json($user);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'errors' => $e->errors()
+            ], 422);
+        }
+    }
+
+    public function destroy($id)
     {
         $user = User::find($id);
-        $user->name = $request->name;
-        $user->email = $request->email;
-        $user->email_verified_at = $request->email_verified_at;
-        $user->password = $request->password;
-        $user->remember_token = $request->remember_token;
-        $user->save();
-        return response()->json($user);
-    }
+        if (!$user) {
+            return response()->json(['error' => 'User not found'], 404);
+        }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy(string $id)
-    {
-        User::destroy($id);
-        return response()->json(['message' => 'Deleted']);
-    }
-    public function indexPage()
-    {
-        $users = User::all();
-        return view('users.index', compact('users'));
-    }
-
-    public function createPage()
-    {
-        return view('users.create');
-    }
-
-    public function editPage($id)
-    {
-        $user = User::findOrFail($id);
-        return view('users.edit', compact('user'));
+        $user->delete();
+        return response()->json(['message' => 'User deleted']);
     }
 }
